@@ -1,0 +1,149 @@
+# Snake_game<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>🐍 스네이크 게임 (터치 지원)</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    canvas {
+      background: #222;
+      margin-top: 10px;
+      border: 3px solid lime;
+    }
+    #scoreBox {
+      font-size: 20px;
+      margin: 10px;
+    }
+    #controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      background: lime;
+      color: black;
+      border: none;
+      border-radius: 10px;
+    }
+    button#restart {
+      margin-top: 10px;
+      background: #f39c12;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐍 스네이크 게임</h1>
+  <div id="scoreBox">점수: 0</div>
+  <canvas id="game" width="400" height="400"></canvas>
+
+  <div id="controls">
+    <button class="btn" onclick="setDir(0, -1)">⬆️</button><br>
+    <button class="btn" onclick="setDir(-1, 0)">⬅️</button>
+    <button class="btn" onclick="setDir(1, 0)">➡️</button>
+    <button class="btn" onclick="setDir(0, 1)">⬇️</button>
+  </div>
+
+  <button id="restart" onclick="restartGame()">🔁 다시 시작</button>
+  <audio id="eatSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg" preload="auto"></audio>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const eatSound = document.getElementById('eatSound');
+    const scoreBox = document.getElementById('scoreBox');
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake, food, dx, dy, score, gameLoop;
+
+    function init() {
+      snake = [{ x: 10, y: 10 }];
+      food = { x: 15, y: 15 };
+      dx = 0; dy = 0;
+      score = 0;
+      updateScore();
+      if (gameLoop) clearInterval(gameLoop);
+      gameLoop = setInterval(draw, 100);
+    }
+
+    function draw() {
+      ctx.fillStyle = "#222";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+
+      ctx.fillStyle = "lime";
+      snake.forEach(part => {
+        ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+      });
+
+      move();
+
+      const head = snake[0];
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount ||
+          snake.slice(1).some(p => p.x === head.x && p.y === head.y)) {
+        clearInterval(gameLoop);
+        setTimeout(() => alert(`💀 게임 오버!\n점수: ${score}`), 100);
+      }
+    }
+
+    function move() {
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        updateScore();
+        eatSound.play();
+        food = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+      } else {
+        snake.pop();
+      }
+    }
+
+    function updateScore() {
+      scoreBox.textContent = `점수: ${score}`;
+    }
+
+    function restartGame() {
+      init();
+    }
+
+    function setDir(x, y) {
+      if (dx !== -x && dy !== -y) {
+        dx = x;
+        dy = y;
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp': setDir(0, -1); break;
+        case 'ArrowDown': setDir(0, 1); break;
+        case 'ArrowLeft': setDir(-1, 0); break;
+        case 'ArrowRight': setDir(1, 0); break;
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
